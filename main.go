@@ -4,8 +4,10 @@ import (
 	"agency/entities/agency"
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -25,12 +27,29 @@ func checkCommand(command string) {
 	switch command {
 	case "list":
 	case "get":
+		getExistingAgency()
 	case "create":
 		createNewAgency()
 	case "edit":
 	case "status":
 
 	}
+}
+
+func getExistingAgency() {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println("please enter the agency ID")
+	scanner.Scan()
+	ID := strings.TrimSpace(scanner.Text())
+	a, err := getAgencyByID(ID)
+	if err != nil {
+		log.Fatalln("Error in getting agency:", err)
+	}
+	fmt.Println()
+	fmt.Println("Your Agency Found!")
+	fmt.Println()
+	fmt.Println(a)
+	fmt.Println()
 }
 
 func createNewAgency() {
@@ -77,14 +96,21 @@ func createNewAgency() {
 }
 
 func saveAgency(a *agency.Agency) error {
-	err := writeToCSVFile("agency.csv", agency.ToCSV(a))
+	err := writeToCsvFile("agency.csv", agency.ToCSV(a))
 	if err != nil {
 		return err
 	}
 	return nil
 }
+func getAgencyByID(ID string) (*agency.Agency, error) {
+	a, err := readFromCsvFile("agency.csv", ID)
+	if err != nil {
+		return nil, err
+	}
+	return agency.FromCSV(a), nil
+}
 
-func writeToCSVFile(filePath string, record []string) error {
+func writeToCsvFile(filePath string, record []string) error {
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
@@ -101,4 +127,31 @@ func writeToCSVFile(filePath string, record []string) error {
 		return err
 	}
 	return nil
+}
+
+func readFromCsvFile(filePath string, key string) ([]string, error) {
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			if len(record) > 0 && record[0] == key {
+				return record, nil
+			}
+			return nil, errors.New("key doesn't exist!")
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(record) > 0 && record[0] == key {
+			return record, nil
+		}
+	}
+
 }
