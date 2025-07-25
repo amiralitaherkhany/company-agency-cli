@@ -28,8 +28,8 @@ func New(name, address, phoneNumber, membershipDate, regionName string, numberOf
 }
 
 func (a Agency) String() string {
-	const formatText = "%s Agency in the %s Region\nAddress: %s\nPhone Number: %s\nMembership Date: %s\nEmployees: %d\n"
-	return fmt.Sprintf(formatText, a.Name, a.RegionName, a.Address, a.PhoneNumber, a.MembershipDate, a.NumberOfEmployees)
+	const formatText = "%s Agency in the %s Region\nAddress: %s\nPhone Number: %s\nMembership Date: %s\nEmployees: %d\nUUID: %s\n"
+	return fmt.Sprintf(formatText, a.Name, a.RegionName, a.Address, a.PhoneNumber, a.MembershipDate, a.NumberOfEmployees, a.UUID)
 }
 
 func ToCSV(a *Agency) []string {
